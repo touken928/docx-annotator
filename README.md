@@ -24,13 +24,11 @@ Document
 
 用户只会接触三种对象：
 
-| 类型 | 说明 |
+| 类型        | 说明   |
 | ----------- | ------ |
-| `Paragraph` | 段落 |
-| `Table` | 表格 |
-| `Cell` | 单元格 |
-
-Word XML 中的 **Run** 和 **Row** 不会暴露。
+| `Paragraph` | 段落   |
+| `Table`     | 表格   |
+| `Cell`      | 单元格 |
 
 ---
 
@@ -148,6 +146,7 @@ paragraph.comment("需要修改", start=3, end=8, author="张三")
 ```
 
 docxnote 会自动处理：
+
 - Run 分割
 - 批注锚点
 - comments.xml 写入
@@ -257,87 +256,4 @@ if bottom - top > 1 or right - left > 1:
 
 ## 测试
 
-```bash
-# 安装测试依赖
-pip install -e ".[test]"
-
-# 运行测试
-pytest
-
-# 详细输出
-pytest -v
-```
-
-测试套件包含 57 个测试用例，覆盖：
-- XML 语法合法性
-- 与 python-docx 的解析对比
-- 段落文本理解（含换行符、制表符）
-- 表格形状（含合并单元格）
-- 嵌套表格
-- 单元格内容
-- 批注功能
-- **批注冲突处理**（重叠批注、多次渲染、Run 分割）
-
-所有测试文档使用 python-docx 动态生成，不依赖外部文件。
-
-详见 [tests/README.md](tests/README.md)。
-
----
-
-## 设计理念
-
-### 为什么隐藏 Run？
-
-Word 的 Run 结构是为了支持富文本格式（粗体、斜体、颜色等），但对于批注场景来说过于复杂：
-
-```xml
-<!-- Word XML 中的 Run 结构 -->
-<w:p>
-  <w:r><w:t>这是</w:t></w:r>
-  <w:r><w:rPr><w:b/></w:rPr><w:t>粗体</w:t></w:r>
-  <w:r><w:t>文本</w:t></w:r>
-</w:p>
-```
-
-docxnote 将其简化为：
-
-```python
-paragraph.text  # "这是粗体文本"
-paragraph.comment("批注", start=2, end=4)  # 为"粗体"添加批注
-```
-
-### 文本视图 vs Run 视图
-
-| 特性 | docxnote（文本视图） | 传统库（Run 视图） |
-| --- | --- | --- |
-| API 复杂度 | 简单 | 复杂 |
-| 批注定位 | 字符位置 | Run + 偏移量 |
-| Run 分割 | 自动处理 | 手动处理 |
-| 学习曲线 | 平缓 | 陡峭 |
-
----
-
-## 限制
-
-- **只读格式**：不保留文本格式（粗体、斜体等），只提取纯文本
-- **简化合并**：对复杂的单元格合并支持有限
-- **批注功能**：专注于添加批注，不支持修改文档内容
-
-如果需要完整的 DOCX 编辑功能，请使用 [python-docx](https://python-docx.readthedocs.io/)。
-
----
-
-## 依赖
-
-- Python >= 3.12
-- lxml >= 5.0.0
-
-测试依赖：
-- pytest >= 8.0.0
-- python-docx >= 1.0.0
-
----
-
-## 许可证
-
-MIT License
+所有测试文档使用 python-docx 动态生成，不依赖外部文件，详见 [tests/README.md](tests/README.md)。
