@@ -1,4 +1,4 @@
-# docxnote
+# Docxnote
 
 **docxnote** 是一个轻量级 **DOCX 批注引擎**，仅依赖 lxml，用于自动化添加 Word 批注。
 
@@ -8,27 +8,17 @@
 
 ---
 
-## 文档结构
-
-DOCX 被解析为以下结构：
+## 安装
 
 ```
-Document
-├── Paragraph
-├── Paragraph
-└── Table
-    └── Cell
-        ├── Paragraph
-        └── Table
+pip install git+https://github.com/touken928/docxnote.git
 ```
 
-用户只会接触三种对象：
+使用 [uv](https://github.com/astral-sh/uv)：
 
-| 类型        | 说明   |
-| ----------- | ------ |
-| `Paragraph` | 段落   |
-| `Table`     | 表格   |
-| `Cell`      | 单元格 |
+```
+uv add git+https://github.com/touken928/docxnote.git
+```
 
 ---
 
