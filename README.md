@@ -29,7 +29,11 @@ from docxnote import DocxDocument, Paragraph, Table
 
 # 读取文档
 with open("document.docx", "rb") as f:
+    # 默认不保留原有批注（会清空）
     doc = DocxDocument.parse(f.read())
+
+    # 如需保留原有批注并继续添加：
+    # doc = DocxDocument.parse(f.read(), keep_comments=True)
 
 # 遍历文档块
 for block in doc.blocks():
@@ -66,10 +70,12 @@ DOCX 文档对象。
 #### parse
 
 ```python
-DocxDocument.parse(docx_bytes)
+DocxDocument.parse(docx_bytes, *, keep_comments=False)
 ```
 
 解析 DOCX 并构建文档对象。
+
+- **keep_comments**: 是否保留原有批注。默认 `False`（清空所有原有批注）。如果你需要在“已有批注的 docx 上继续添加批注”并保留旧批注，请传 `True`。
 
 ---
 

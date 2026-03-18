@@ -174,7 +174,7 @@ def test_existing_multiline_comment_preserved_after_second_comment():
         assert _extract_comment_text(c0) == "第一段批注\n第二段批注"
 
     # 用 docxnote 二次批注并渲染
-    dn = DocxDocument.parse(docx_bytes)
+    dn = DocxDocument.parse(docx_bytes, keep_comments=True)
     p = next(b for b in dn.blocks() if isinstance(b, Paragraph) and b.text)
     p.comment("新增批注", start=0, end=5, author="new")
     out = dn.render()

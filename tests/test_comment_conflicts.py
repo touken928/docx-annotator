@@ -42,7 +42,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 1
         
         # 第二次解析并批注 "12"
-        doc2 = DocxDocument.parse(output1)
+        doc2 = DocxDocument.parse(output1, keep_comments=True)
         paragraphs2 = [b for b in doc2.blocks() if isinstance(b, Paragraph)]
         paragraphs2[0].comment("批注12", start=0, end=2, author="user2")
         
@@ -61,7 +61,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 2
         
         # 验证文本内容没有改变
-        doc3 = DocxDocument.parse(output2)
+        doc3 = DocxDocument.parse(output2, keep_comments=True)
         paragraphs3 = [b for b in doc3.blocks() if isinstance(b, Paragraph)]
         assert paragraphs3[0].text == "1234"
     
@@ -100,7 +100,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 3
         
         # 验证文本内容
-        doc2 = DocxDocument.parse(output)
+        doc2 = DocxDocument.parse(output, keep_comments=True)
         paragraphs2 = [b for b in doc2.blocks() if isinstance(b, Paragraph)]
         assert paragraphs2[0].text == "ABCDEF"
     
@@ -154,13 +154,13 @@ class TestCommentConflicts:
         output1 = doc1.render()
         
         # 第二轮：批注 "DEF"
-        doc2 = DocxDocument.parse(output1)
+        doc2 = DocxDocument.parse(output1, keep_comments=True)
         p2 = [b for b in doc2.blocks() if isinstance(b, Paragraph)][0]
         p2.comment("批注2", start=3, end=6, author="user2")
         output2 = doc2.render()
         
         # 第三轮：批注 "GHI"
-        doc3 = DocxDocument.parse(output2)
+        doc3 = DocxDocument.parse(output2, keep_comments=True)
         p3 = [b for b in doc3.blocks() if isinstance(b, Paragraph)][0]
         p3.comment("批注3", start=6, end=9, author="user3")
         output3 = doc3.render()
@@ -176,7 +176,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 3
         
         # 验证文本内容
-        doc_final = DocxDocument.parse(output3)
+        doc_final = DocxDocument.parse(output3, keep_comments=True)
         p_final = [b for b in doc_final.blocks() if isinstance(b, Paragraph)][0]
         assert p_final.text == "ABCDEFGHIJ"
     
@@ -204,7 +204,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 1
         
         # 第二次批注 "234"（与第一次重叠）
-        doc2 = DocxDocument.parse(output1)
+        doc2 = DocxDocument.parse(output1, keep_comments=True)
         p2 = [b for b in doc2.blocks() if isinstance(b, Paragraph)][0]
         p2.comment("第二次批注", start=1, end=4, author="user2")
         output2 = doc2.render()
@@ -220,7 +220,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 2
         
         # 第三次批注 "456"（与前两次都重叠）
-        doc3 = DocxDocument.parse(output2)
+        doc3 = DocxDocument.parse(output2, keep_comments=True)
         p3 = [b for b in doc3.blocks() if isinstance(b, Paragraph)][0]
         p3.comment("第三次批注", start=3, end=6, author="user3")
         output3 = doc3.render()
@@ -236,7 +236,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 3
         
         # 验证文本内容始终不变
-        doc_final = DocxDocument.parse(output3)
+        doc_final = DocxDocument.parse(output3, keep_comments=True)
         p_final = [b for b in doc_final.blocks() if isinstance(b, Paragraph)][0]
         assert p_final.text == "1234567890"
     
@@ -258,7 +258,7 @@ class TestCommentConflicts:
         output1 = doc1.render()
         
         # 第二次批注部分 "BC"
-        doc2 = DocxDocument.parse(output1)
+        doc2 = DocxDocument.parse(output1, keep_comments=True)
         p2 = [b for b in doc2.blocks() if isinstance(b, Paragraph)][0]
         p2.comment("部分批注", start=1, end=3, author="user2")
         output2 = doc2.render()
@@ -274,7 +274,7 @@ class TestCommentConflicts:
             assert len(comments_tree) == 2
         
         # 验证文本内容
-        doc3 = DocxDocument.parse(output2)
+        doc3 = DocxDocument.parse(output2, keep_comments=True)
         p3 = [b for b in doc3.blocks() if isinstance(b, Paragraph)][0]
         assert p3.text == "ABCDE"
     
@@ -316,6 +316,6 @@ class TestCommentConflicts:
             assert len(comments_tree) == 5
         
         # 验证文本内容
-        doc2 = DocxDocument.parse(output)
+        doc2 = DocxDocument.parse(output, keep_comments=True)
         p2 = [b for b in doc2.blocks() if isinstance(b, Paragraph)][0]
         assert p2.text == "0123456789"

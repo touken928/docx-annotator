@@ -22,20 +22,53 @@ class DocxDocument:
         self._comment_id_counter = 0
         
     @classmethod
-    def parse(cls, docx_bytes: bytes) -> "DocxDocument":
-        """解析 DOCX 并构建文档对象"""
+    def parse(cls, docx_bytes: bytes, *, keep_comments: bool = False) -> "DocxDocument":
+        """解析 DOCX 并构建文档对象
+
+        Args:
+            keep_comments: 是否保留原有批注。默认 False（清空所有原有批注）。
+        """
         doc = cls(docx_bytes)
-        doc._load_document()
+        doc._load_document(keep_comments=keep_comments)
         return doc
     
-    def _load_document(self):
-        """加载 document.xml 和已有批注"""
+    def _load_document(self, *, keep_comments: bool):
+        """加载 document.xml，并按需保留/清空原有批注"""
         doc_xml = self._zip.read("word/document.xml")
         self._document_xml = etree.fromstring(doc_xml)
         self._body = self._document_xml.find(".//w:body", NS)
         
-        # 加载已有的批注
-        self._load_existing_comments()
+        if keep_comments:
+            # 加载已有的批注
+            self._load_existing_comments()
+        else:
+            # 默认不保留：清空 comments 列表，并移除 document.xml 中的批注标记
+            self._comments = []
+            self._comment_id_counter = 0
+            self._strip_all_comment_markers()
+
+    def _strip_all_comment_markers(self) -> None:
+        """移除 document.xml 中所有批注相关标记，避免残留引用。"""
+        if self._document_xml is None:
+            return
+
+        # commentRangeStart / commentRangeEnd
+        for tag in ("commentRangeStart", "commentRangeEnd"):
+            for el in self._document_xml.findall(f".//w:{tag}", NS):
+                parent = el.getparent()
+                if parent is not None:
+                    parent.remove(el)
+
+        # commentReference 位于 w:r 内；移除后若 run 为空则一并移除
+        for ref in self._document_xml.findall(".//w:commentReference", NS):
+            run = ref.getparent()
+            if run is None:
+                continue
+            run.remove(ref)
+            if len(run) == 0 and (run.text is None) and (run.tail is None or run.tail == ""):
+                parent = run.getparent()
+                if parent is not None:
+                    parent.remove(run)
     
     def _load_existing_comments(self):
         """加载已有的批注"""
