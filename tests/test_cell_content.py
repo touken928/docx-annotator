@@ -168,3 +168,43 @@ class TestCellContent:
             dn_text = "\n".join(dn_texts)
             
             assert dn_text == pd_cell.text
+
+    def test_merged_cells_share_same_content_and_blocks_are_tuple(self):
+        """复杂合并单元格：覆盖区域应返回相同内容，且 blocks() 返回 tuple"""
+        pd_doc = PythonDocxDocument()
+        table = pd_doc.add_table(rows=3, cols=3)
+        table.style = "Table Grid"
+
+        # 基础填充，方便定位问题
+        for r in range(3):
+            for c in range(3):
+                table.cell(r, c).text = f"R{r}C{c}"
+
+        # 创建一个 2x2 的复合合并块：(0,0) 到 (1,1)
+        merged = table.cell(0, 0).merge(table.cell(1, 1))
+        merged.text = "MERGED_2x2"
+
+        buf = BytesIO()
+        pd_doc.save(buf)
+        buf.seek(0)
+        doc_bytes = buf.getvalue()
+
+        dn_doc = DocxDocument.parse(doc_bytes)
+        dn_table = [b for b in dn_doc.blocks() if isinstance(b, Table)][0]
+        pd_doc2 = PythonDocxDocument(BytesIO(doc_bytes))
+        pd_table = pd_doc2.tables[0]
+
+        # blocks() 类型要求：文档 blocks 和单元格 blocks 都应是 tuple
+        assert isinstance(dn_doc.blocks(), tuple)
+        assert isinstance(dn_table[0, 0].blocks(), tuple)
+
+        # 合并覆盖区域 (0,0),(0,1),(1,0),(1,1) 的文本应一致
+        merged_coords = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        for r, c in merged_coords:
+            dn_cell = dn_table[r, c]
+            pd_cell = pd_table.cell(r, c)
+
+            dn_texts = [b.text for b in dn_cell.blocks() if isinstance(b, Paragraph)]
+            dn_text = "\n".join(dn_texts)
+
+            assert dn_text == pd_cell.text, f"合并覆盖单元格 [{r},{c}] 文本不一致"

@@ -63,17 +63,19 @@ class DocxDocument:
             # 没有 comments.xml 文件
             pass
     
-    def blocks(self) -> Iterator[Paragraph | Table]:
-        """返回文档中的块级元素"""
+    def blocks(self) -> tuple[Paragraph | Table, ...]:
+        """返回文档中的块级元素（元组）"""
         if self._body is None:
-            return
-        
+            return ()
+
+        blocks: list[Paragraph | Table] = []
         for child in self._body:
             tag = etree.QName(child.tag).localname
             if tag == "p":
-                yield Paragraph(child, self)
+                blocks.append(Paragraph(child, self))
             elif tag == "tbl":
-                yield Table(child, self)
+                blocks.append(Table(child, self))
+        return tuple(blocks)
     
     def add_comment(self, text: str, author: str = "docxnote") -> int:
         """添加批注并返回 ID"""
