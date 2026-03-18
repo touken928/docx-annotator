@@ -52,8 +52,7 @@ class DocxDocument:
                     
                     # 提取批注内容
                     author = comment.get(f"{{{NS['w']}}}author", "")
-                    text_elem = comment.find(f".//{{{NS['w']}}}t", NS)
-                    text = text_elem.text if text_elem is not None and text_elem.text else ""
+                    text = self._extract_comment_text(comment)
                     
                     self._comments.append((comment_id, text, author))
             
@@ -62,6 +61,30 @@ class DocxDocument:
         except KeyError:
             # 没有 comments.xml 文件
             pass
+
+    def _extract_comment_text(self, comment_element: etree._Element) -> str:
+        """从 w:comment 中提取完整文本（按 w:p 插入换行）。"""
+        parts: list[str] = []
+        first_para = True
+
+        # comments.xml 内部结构通常是多个 w:p
+        for p in comment_element.findall(".//w:p", NS):
+            if not first_para:
+                parts.append("\n")
+            first_para = False
+
+            for run in p.findall(".//w:r", NS):
+                for child in run:
+                    tag = etree.QName(child.tag).localname
+                    if tag == "t":
+                        if child.text:
+                            parts.append(child.text)
+                    elif tag == "br":
+                        parts.append("\n")
+                    elif tag == "tab":
+                        parts.append("\t")
+
+        return "".join(parts)
     
     def blocks(self) -> tuple[Paragraph | Table, ...]:
         """返回文档中的块级元素（元组）"""
@@ -144,11 +167,42 @@ class DocxDocument:
                     f"{{{NS['w']}}}initials": author[0].upper() if author else "D"
                 }
             )
-            
-            p = etree.SubElement(comment, f"{{{NS['w']}}}p")
-            r = etree.SubElement(p, f"{{{NS['w']}}}r")
-            t = etree.SubElement(r, f"{{{NS['w']}}}t")
-            t.text = text
+
+            # 按换行拆分为多个段落，尽量保留原批注的多段结构
+            lines = text.split("\n")
+            if not lines:
+                lines = [""]
+
+            for line in lines:
+                p = etree.SubElement(comment, f"{{{NS['w']}}}p")
+                r = etree.SubElement(p, f"{{{NS['w']}}}r")
+
+                # 处理 tab：用 w:tab 表示
+                if "\t" in line:
+                    buf: list[str] = []
+                    for ch in line:
+                        if ch == "\t":
+                            if buf:
+                                t = etree.SubElement(r, f"{{{NS['w']}}}t")
+                                seg = "".join(buf)
+                                if seg[:1] == " " or seg[-1:] == " ":
+                                    t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                                t.text = seg
+                                buf.clear()
+                            etree.SubElement(r, f"{{{NS['w']}}}tab")
+                        else:
+                            buf.append(ch)
+                    if buf or line == "":
+                        t = etree.SubElement(r, f"{{{NS['w']}}}t")
+                        seg = "".join(buf)
+                        if seg[:1] == " " or seg[-1:] == " ":
+                            t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                        t.text = seg
+                else:
+                    t = etree.SubElement(r, f"{{{NS['w']}}}t")
+                    if line[:1] == " " or line[-1:] == " ":
+                        t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                    t.text = line
         
         return etree.tostring(
             root,
