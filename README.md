@@ -300,3 +300,13 @@ uv run pre-commit run --all-files
 ```bash
 uv run pytest
 ```
+
+---
+
+## SKILL
+
+- 本仓库附带 `SKILL.md`，用于指导对话型 / coding Agent 正确调用 `docxnote`。
+- 建议下载到本地并放置在（根据所用工具选择其一）：
+  - `.cursor/docxnote/SKILL.md`
+  - `.claude/docxnote/SKILL.md`
+- 在对话环境中使用本库时，让 Agent 优先参考该文件中的安装方式、推荐代码骨架与注意事项。
