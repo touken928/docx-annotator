@@ -253,3 +253,50 @@ if bottom - top > 1 or right - left > 1:
 ## 测试
 
 所有测试文档使用 python-docx 动态生成，不依赖外部文件，详见 [tests/README.md](tests/README.md)。
+
+---
+
+## 开发环境与提交规范
+
+### 克隆与依赖安装
+
+- **克隆仓库**：
+
+```bash
+git clone git@github.com:touken928/docxnote.git
+cd docxnote
+```
+
+- **同步开发依赖**（测试 + pre-commit 等）：
+
+```bash
+uv sync --group dev
+```
+
+### 预提交钩子（pre-commit）
+
+- **安装 pre-commit 钩子**（确保提交前自动格式化、lint、跑测试）：
+
+```bash
+uv run pre-commit install
+```
+
+之后每次 `git commit` 会自动运行：
+
+- `uv-lock`（保持 uv 依赖锁文件同步）
+- `ruff` / `ruff-format`（代码风格与静态检查）
+- `pytest via uv`（自动化测试）
+
+如需手动在本地检查所有文件，可以运行：
+
+```bash
+uv run pre-commit run --all-files
+```
+
+### 本地测试
+
+- 单次运行所有测试：
+
+```bash
+uv run pytest
+```

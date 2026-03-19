@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Iterator
 from lxml import etree
 from .namespaces import NS
 
 
 class Table:
     """表示 Word 表格"""
-    
+
     def __init__(self, element, document):
         self._element = element
         self._document = document
         self._grid = None
         self._build_grid()
-    
+
     def _build_grid(self):
         """构建表格网格，处理合并单元格"""
         # 只查找直接子行，不包括嵌套表格的行
@@ -27,7 +26,9 @@ class Table:
         # 构建一个“展开到坐标”的网格：同一合并区域的所有坐标都指向起始 Cell
         self._grid = []
         row_maps: list[dict[int, Cell]] = []
-        active_vmerge: dict[int, Cell] = {}  # col -> origin cell (for current/next rows)
+        active_vmerge: dict[
+            int, Cell
+        ] = {}  # col -> origin cell (for current/next rows)
         max_cols = 0
 
         for r_idx, row in enumerate(rows):
@@ -57,7 +58,9 @@ class Table:
                     if vmerge is not None:
                         vmerge_val = vmerge.get(f"{{{NS['w']}}}val")
 
-                is_vmerge_continue = vmerge_val is None and (tc_pr is not None and tc_pr.find("./w:vMerge", NS) is not None)
+                is_vmerge_continue = vmerge_val is None and (
+                    tc_pr is not None and tc_pr.find("./w:vMerge", NS) is not None
+                )
                 if vmerge_val is not None:
                     is_vmerge_continue = vmerge_val != "restart"
 
@@ -74,7 +77,11 @@ class Table:
                         active_vmerge.pop(col_idx + i, None)
 
                     # 如果当前单元格是 vMerge restart，则开启纵向合并跟踪
-                    if vmerge_val == "restart" or (tc_pr is not None and tc_pr.find("./w:vMerge", NS) is not None and vmerge_val == "restart"):
+                    if vmerge_val == "restart" or (
+                        tc_pr is not None
+                        and tc_pr.find("./w:vMerge", NS) is not None
+                        and vmerge_val == "restart"
+                    ):
                         for i in range(colspan):
                             active_vmerge[col_idx + i] = origin
 
@@ -112,30 +119,39 @@ class Table:
         for r_idx, row_map in enumerate(row_maps):
             matrix_row: list[Cell] = []
             for c in range(max_cols):
-                matrix_row.append(row_map.get(c) or Cell(None, self._document, r_idx, c, 1))
+                matrix_row.append(
+                    row_map.get(c) or Cell(None, self._document, r_idx, c, 1)
+                )
             self._matrix.append(matrix_row)
-    
+
     def shape(self) -> tuple[int, int]:
         """返回表格尺寸 (rows, cols)"""
         if not self._grid:
             return (0, 0)
         rows = len(self._grid)
-        cols = len(getattr(self, "_matrix", [[]])[0]) if getattr(self, "_matrix", None) else 0
+        cols = (
+            len(getattr(self, "_matrix", [[]])[0])
+            if getattr(self, "_matrix", None)
+            else 0
+        )
         return (rows, cols)
-    
+
     def __getitem__(self, key: tuple[int, int]) -> "Cell":
         """返回 Cell 对象"""
         row, col = key
         matrix = getattr(self, "_matrix", None)
-        if matrix is not None and 0 <= row < len(matrix) and 0 <= col < len(matrix[row]):
+        if (
+            matrix is not None
+            and 0 <= row < len(matrix)
+            and 0 <= col < len(matrix[row])
+        ):
             return matrix[row][col]
         return Cell(None, self._document, row, col, 1)
 
 
-
 class Cell:
     """表示表格单元格"""
-    
+
     def __init__(self, element, document, row: int, col: int, colspan: int = 1):
         self._element = element
         self._document = document
@@ -147,7 +163,7 @@ class Cell:
     def _grow_rowspan_to(self, bottom_exclusive: int) -> None:
         """将 rowspan 扩展到指定 bottom（左闭右开）"""
         self._rowspan = max(self._rowspan, bottom_exclusive - self._row)
-    
+
     def blocks(self) -> tuple:
         """返回单元格中的块级元素（元组）"""
         if self._element is None:
@@ -163,10 +179,15 @@ class Cell:
             elif tag == "tbl":
                 blocks.append(Table(child, self._document))
         return tuple(blocks)
-    
+
     def bounds(self) -> tuple[int, int, int, int]:
         """返回单元格边界 (top, left, bottom, right)"""
         if self._element is None:
             return (self._row, self._col, self._row + 1, self._col + 1)
 
-        return (self._row, self._col, self._row + self._rowspan, self._col + self._colspan)
+        return (
+            self._row,
+            self._col,
+            self._row + self._rowspan,
+            self._col + self._colspan,
+        )

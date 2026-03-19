@@ -48,12 +48,18 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
 
     comment_text_1 = "第一段批注"
     comment_text_2 = "第二段批注"
-    expected_full = f"{comment_text_1}\n{comment_text_2}"
 
     out = BytesIO()
-    with zipfile.ZipFile(BytesIO(base), "r") as zin, zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
+    with zipfile.ZipFile(BytesIO(base), "r") as zin, zipfile.ZipFile(
+        out, "w", zipfile.ZIP_DEFLATED
+    ) as zout:
         # 先复制所有原始条目（将要改写的文件跳过，避免 zip 内出现重复条目）
-        skip = {"word/document.xml", "word/comments.xml", "word/_rels/document.xml.rels", "[Content_Types].xml"}
+        skip = {
+            "word/document.xml",
+            "word/comments.xml",
+            "word/_rels/document.xml.rels",
+            "[Content_Types].xml",
+        }
         for name in zin.namelist():
             if name in skip:
                 continue
@@ -66,10 +72,16 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
         p = body.find("./w:p", NS)
         first_run = p.find("./w:r", NS)
 
-        crs = etree.Element(f"{{{NS['w']}}}commentRangeStart", attrib={f"{{{NS['w']}}}id": "0"})
-        cre = etree.Element(f"{{{NS['w']}}}commentRangeEnd", attrib={f"{{{NS['w']}}}id": "0"})
+        crs = etree.Element(
+            f"{{{NS['w']}}}commentRangeStart", attrib={f"{{{NS['w']}}}id": "0"}
+        )
+        cre = etree.Element(
+            f"{{{NS['w']}}}commentRangeEnd", attrib={f"{{{NS['w']}}}id": "0"}
+        )
         cref_run = etree.Element(f"{{{NS['w']}}}r")
-        etree.SubElement(cref_run, f"{{{NS['w']}}}commentReference", attrib={f"{{{NS['w']}}}id": "0"})
+        etree.SubElement(
+            cref_run, f"{{{NS['w']}}}commentReference", attrib={f"{{{NS['w']}}}id": "0"}
+        )
 
         children = list(p)
         run_pos = children.index(first_run)
@@ -79,7 +91,9 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
 
         zout.writestr(
             "word/document.xml",
-            etree.tostring(doc_tree, xml_declaration=True, encoding="UTF-8", standalone=True),
+            etree.tostring(
+                doc_tree, xml_declaration=True, encoding="UTF-8", standalone=True
+            ),
         )
 
         # 写入 comments.xml（两段）
@@ -107,7 +121,9 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
 
         zout.writestr(
             "word/comments.xml",
-            etree.tostring(comments_root, xml_declaration=True, encoding="UTF-8", standalone=True),
+            etree.tostring(
+                comments_root, xml_declaration=True, encoding="UTF-8", standalone=True
+            ),
         )
 
         # 更新 rels：确保存在 comments 关系
@@ -123,7 +139,10 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
                     max_id = max(max_id, int(rid[3:]))
                 except ValueError:
                     pass
-            if rel.get("Type") == "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments":
+            if (
+                rel.get("Type")
+                == "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"
+            ):
                 has_comments = True
         if not has_comments:
             etree.SubElement(
@@ -135,7 +154,9 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
                     "Target": "comments.xml",
                 },
             )
-        zout.writestr(rels_path, etree.tostring(rels_tree, xml_declaration=True, encoding="UTF-8"))
+        zout.writestr(
+            rels_path, etree.tostring(rels_tree, xml_declaration=True, encoding="UTF-8")
+        )
 
         # 更新 content types：确保 Override /word/comments.xml
         ct_xml = zin.read("[Content_Types].xml")
@@ -146,7 +167,9 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
                 has_override = True
                 break
         if not has_override:
-            ns = ct_tree.nsmap.get(None, "http://schemas.openxmlformats.org/package/2006/content-types")
+            ns = ct_tree.nsmap.get(
+                None, "http://schemas.openxmlformats.org/package/2006/content-types"
+            )
             ct_tree.append(
                 etree.Element(
                     f"{{{ns}}}Override",
@@ -156,7 +179,10 @@ def _make_docx_with_existing_multiline_comment() -> bytes:
                     },
                 )
             )
-        zout.writestr("[Content_Types].xml", etree.tostring(ct_tree, xml_declaration=True, encoding="UTF-8"))
+        zout.writestr(
+            "[Content_Types].xml",
+            etree.tostring(ct_tree, xml_declaration=True, encoding="UTF-8"),
+        )
 
     out.seek(0)
     # 把期望值塞到返回里（测试里会重新计算/断言）
@@ -188,7 +214,8 @@ def test_existing_multiline_comment_preserved_after_second_comment():
         assert _extract_comment_text(c0) == "第一段批注\n第二段批注"
 
         # 新批注应当生成一个新的 id（1 或更大）
-        ids = {c.get(f"{{{NS['w']}}}id") for c in comments_tree.findall("./w:comment", NS)}
+        ids = {
+            c.get(f"{{{NS['w']}}}id") for c in comments_tree.findall("./w:comment", NS)
+        }
         assert "0" in ids
         assert any(i != "0" for i in ids)
-

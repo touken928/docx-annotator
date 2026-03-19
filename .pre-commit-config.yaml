@@ -1,0 +1,24 @@
+repos:
+  # 使用 uv 官方 pre-commit 钩子保持锁文件同步（如后续添加 uv.lock）
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.10.9
+    hooks:
+      - id: uv-lock
+
+  # 代码风格与静态检查：ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.8
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
+  # 自动化测试：使用项目内 uv 环境运行 pytest
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest via uv
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        types: [python]
+

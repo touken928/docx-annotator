@@ -11,12 +11,14 @@ dependencies = [
     "lxml>=5.0.0",
 ]
 
-[project.optional-dependencies]
-test = [
-    "pytest>=8.0.0",
-    "python-docx>=1.0.0",
-]
-
 [build-system]
 requires = ["uv_build>=0.9.11,<0.10.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    # 测试与开发工具
+    "pytest>=8.0.0",
+    "python-docx>=1.0.0",
+    "pre-commit>=4.5.1",
+]
