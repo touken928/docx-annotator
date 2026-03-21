@@ -24,13 +24,13 @@ description: >
 在需要时生成代码时，优先使用以下方式安装：
 
 ```bash
-pip install git+https://github.com/touken928/docxnote.git
+pip install docxnote
 ```
 
 或使用 uv：
 
 ```bash
-uv add git+https://github.com/touken928/docxnote.git
+uv add docxnote
 ```
 
 在 Python 代码中导入：

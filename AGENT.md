@@ -1,32 +1,32 @@
 ## Docxnote AGENT 指南
 
-**目标**：保持实现简洁可靠，并在代码、`README.md`、`SKILL.md` 之间**同步功能与用法**。
+**目标**：保持实现简洁可靠，并在代码、`README.md`（英文）、`README_zh-CN.md`（中文）、`SKILL.md` 之间**同步功能与用法**。
 
 ---
 
 ## 文档分工
 
 - **`AGENT.md`**：开发/维护本库时看的内部说明（依赖、测试、设计习惯）。
-- **`README.md`**：对开发者的项目概览和核心 API 简介。
+- **`README.md`**：英文项目概览与核心 API；**`README_zh-CN.md`**：中文对照，与英文同步维护。
 - **`SKILL.md`**：给使用本库的对话型 / coding Agent，看如何在回答中**调用 `docxnote`**，内容尽量精简。
 
 公共 API 或行为变更时：
 
 - 更新实现与测试；
-- 同步更新 `README.md` 的简要说明；
+- 同步更新 `README.md` 与 `README_zh-CN.md` 的简要说明；
 - 同步更新 `SKILL.md` 的示例与推荐用法。
 
 ---
 
 ## 开发与提交要点
 
-- 依赖用 `uv` 管理（详见 `README.md`）。
+- 依赖用 `uv` 管理（见 `pyproject.toml` / `uv.lock`）。
 - 使用 Ruff/ruff-format（通过 pre-commit）统一风格和静态检查。
 - 新功能或行为修改必须有测试覆盖。
 - 提交前跑：
   - `uv run pre-commit run --all-files`
   - `uv run pytest`
-- 发版：更新 `pyproject.toml` 的 `version`，打标签 `v*` 推送；PyPI 使用 Trusted Publisher 与 `.github/workflows/publish.yml` 对应（见 `README.md`）。
+- 发版：更新 `pyproject.toml` 的 `version`，打标签 `v*` 推送；PyPI 使用 Trusted Publisher，与 `.github/workflows/publish.yml` 一致。
 
 ---
 
