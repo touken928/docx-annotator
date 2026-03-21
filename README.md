@@ -131,10 +131,11 @@ paragraph.comment(
     end=None,       # end index (exclusive); None means end of paragraph
     *,
     author="docxnote",
+    date=None,      # datetime (timezone-aware recommended); None = current system time
 )
 ```
 
-Adds a comment spanning the given character range in the paragraph.
+Adds a comment spanning the given character range in the paragraph. The `w:date` value in `comments.xml` is stored in UTC (`…Z`). A naive `datetime` (no `tzinfo`) is treated as UTC.
 
 **Example:**
 

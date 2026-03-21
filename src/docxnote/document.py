@@ -3,11 +3,38 @@
 import io
 import threading
 import zipfile
+from datetime import datetime, timezone
 from lxml import etree
 
 from .paragraph import Paragraph
 from .table import Table
 from .namespaces import NS
+
+
+def _parse_w_comment_date(value: str | None) -> datetime:
+    """Parse w:date from comments.xml (ISO 8601, often UTC with Z)."""
+    if not value or not str(value).strip():
+        return datetime.now(timezone.utc)
+    v = str(value).strip()
+    if v.endswith("Z"):
+        v = v[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(v)
+    except ValueError:
+        return datetime.now(timezone.utc)
+
+
+def _format_w_comment_date(dt: datetime) -> str:
+    """Serialize datetime to w:date (UTC, ``...Z`` suffix)."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    utc = dt.astimezone(timezone.utc)
+    return utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _default_new_comment_date() -> datetime:
+    """Default comment time: current system time (timezone-aware local)."""
+    return datetime.now().astimezone()
 
 
 class DocxDocument:
@@ -95,8 +122,10 @@ class DocxDocument:
                     # 提取批注内容
                     author = comment.get(f"{{{NS['w']}}}author", "")
                     text = self._extract_comment_text(comment)
+                    date_str = comment.get(f"{{{NS['w']}}}date")
+                    date_val = _parse_w_comment_date(date_str)
 
-                    self._comments.append((comment_id, text, author))
+                    self._comments.append((comment_id, text, author, date_val))
 
             # 设置下一个批注 ID
             self._comment_id_counter = max_id + 1
@@ -143,12 +172,23 @@ class DocxDocument:
                     blocks.append(Table(child, self))
             return tuple(blocks)
 
-    def add_comment(self, text: str, author: str = "docxnote") -> int:
-        """添加批注并返回 ID"""
+    def add_comment(
+        self,
+        text: str,
+        author: str = "docxnote",
+        *,
+        date: datetime | None = None,
+    ) -> int:
+        """添加批注并返回 ID。
+
+        Args:
+            date: 批注时间；默认 ``None`` 表示使用当前系统时间（带时区）。
+        """
         with self._lock:
+            when = date if date is not None else _default_new_comment_date()
             comment_id = self._comment_id_counter
             self._comment_id_counter += 1
-            self._comments.append((comment_id, text, author))
+            self._comments.append((comment_id, text, author, when))
             return comment_id
 
     def render(self) -> bytes:
@@ -201,14 +241,14 @@ class DocxDocument:
         """构建 comments.xml"""
         root = etree.Element(f"{{{NS['w']}}}comments", nsmap=NS)
 
-        for comment_id, text, author in self._comments:
+        for comment_id, text, author, date_val in self._comments:
             comment = etree.SubElement(
                 root,
                 f"{{{NS['w']}}}comment",
                 attrib={
                     f"{{{NS['w']}}}id": str(comment_id),
                     f"{{{NS['w']}}}author": author,
-                    f"{{{NS['w']}}}date": "2024-01-01T00:00:00Z",
+                    f"{{{NS['w']}}}date": _format_w_comment_date(date_val),
                     f"{{{NS['w']}}}initials": author[0].upper() if author else "D",
                 },
             )

@@ -1,5 +1,7 @@
 """段落处理"""
 
+from datetime import datetime
+
 from lxml import etree
 from .namespaces import NS
 
@@ -45,14 +47,19 @@ class Paragraph:
         end: int | None = None,
         *,
         author: str = "docxnote",
+        date: datetime | None = None,
     ):
-        """为段落文本范围添加批注"""
+        """为段落文本范围添加批注。
+
+        Args:
+            date: 批注时间；默认 ``None`` 表示使用当前系统时间（带时区）。
+        """
         with self._document._lock:
             if end is None:
                 end = len(self.text)
 
             # 获取批注 ID
-            comment_id = self._document.add_comment(text, author)
+            comment_id = self._document.add_comment(text, author, date=date)
 
             # 在段落中插入批注标记
             self._insert_comment_markers(comment_id, start, end)

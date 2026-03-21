@@ -1,9 +1,13 @@
 """测试批注功能"""
 
 import zipfile
+from datetime import datetime, timezone
 from io import BytesIO
 
+from lxml import etree
+
 from docxnote import DocxDocument, Paragraph, Table
+from docxnote.namespaces import NS
 
 
 class TestComments:
@@ -22,7 +26,7 @@ class TestComments:
         # 验证批注被添加
         assert len(doc._comments) == 1
 
-        comment_id, text, author = doc._comments[0]
+        comment_id, text, author, _date = doc._comments[0]
         assert text == "测试批注"
         assert author == "tester"
 
@@ -102,8 +106,25 @@ class TestComments:
                 break
 
         # 验证使用了默认作者
-        comment_id, text, author = doc._comments[0]
+        comment_id, text, author, _date = doc._comments[0]
         assert author == "docxnote"
+
+    def test_comment_custom_date_in_comments_xml(self, simple_doc):
+        """自定义批注时间写入 comments.xml 的 w:date"""
+        fixed = datetime(2020, 6, 15, 12, 30, 0, tzinfo=timezone.utc)
+        doc = DocxDocument.parse(simple_doc)
+
+        for block in doc.blocks():
+            if isinstance(block, Paragraph) and block.text:
+                block.comment("dated", end=3, author="tester", date=fixed)
+                break
+
+        out = doc.render()
+        with zipfile.ZipFile(BytesIO(out)) as z:
+            root = etree.fromstring(z.read("word/comments.xml"))
+        el = root.find(f"{{{NS['w']}}}comment")
+        assert el is not None
+        assert el.get(f"{{{NS['w']}}}date") == "2020-06-15T12:30:00Z"
 
     def test_comment_empty_text(self, simple_doc):
         """测试空批注文本"""

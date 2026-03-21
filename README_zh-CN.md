@@ -135,11 +135,12 @@ paragraph.comment(
     start=0,        # 起始字符位置
     end=None,       # 结束字符位置（None 表示到末尾）
     *,
-    author="docxnote"  # 批注作者
+    author="docxnote",  # 批注作者
+    date=None,          # 批注时间（建议带时区）；None 表示当前系统时间
 )
 ```
 
-为段落文本范围添加批注。
+为段落文本范围添加批注。写入 `comments.xml` 的 `w:date` 为 UTC（`…Z`）。若传入不带时区的 `datetime`，按 UTC 解释。
 
 **示例：**
 

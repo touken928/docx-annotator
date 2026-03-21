@@ -141,10 +141,12 @@ paragraph.comment(
     start=0,        # 起始字符索引（含）
     end=None,       # 结束字符索引（不含），None 表示到段落末尾
     author="docxnote",  # 批注作者
+    date=None,          # datetime，None 表示当前系统时间
 )
 ```
 
 - 索引基于 Python 字符串切片约定：\([start, end)\)。
+- `date` 为 `None` 时使用当前系统时间（带时区）；写入 Word 的 `w:date` 为 UTC。无时区的 `datetime` 按 UTC 写入。
 - 若 `end` 为 `None`，表示从 `start` 到段落末尾。
 - 当根据条件动态计算范围时，务必：
   - 确保 `0 <= start <= len(paragraph.text)`。
@@ -307,7 +309,7 @@ if not (paragraph.text or "").strip():
 - **遍历块**: `for block in doc.blocks():`
 - **判断类型**: `isinstance(block, Paragraph)` / `isinstance(block, Table)`
 - **段落文本**: `paragraph.text`
-- **添加批注**: `paragraph.comment("内容", start=0, end=None, author="谁")`
+- **添加批注**: `paragraph.comment("内容", start=0, end=None, author="谁", date=None)`
 - **表格尺寸**: `rows, cols = table.shape()`
 - **访问单元格**: `cell = table[r, c]`
 - **单元格内容块**: `cell.blocks()`
