@@ -31,6 +31,7 @@
 
 ## 实现习惯
 
+- 同一 `DocxDocument` 使用 `threading.RLock` 保护共享状态；新增访问 XML / 批注列表的路径须持锁。
 - 对外只暴露文本视图与高层对象：
   - `DocxDocument` / `Paragraph` / `Table` / `Cell`
   - 使用 `paragraph.text` 和 `paragraph.comment(start, end, ...)` 等简单接口。

@@ -15,27 +15,28 @@ class Paragraph:
     @property
     def text(self) -> str:
         """返回段落完整文本"""
-        if self._text_cache is not None:
+        with self._document._lock:
+            if self._text_cache is not None:
+                return self._text_cache
+
+            text_parts = []
+            for run in self._element.findall(".//w:r", NS):
+                # 遍历 run 的所有子元素，保持顺序
+                for child in run:
+                    tag = etree.QName(child.tag).localname
+                    if tag == "t":
+                        # 文本节点
+                        if child.text:
+                            text_parts.append(child.text)
+                    elif tag == "br":
+                        # 换行符
+                        text_parts.append("\n")
+                    elif tag == "tab":
+                        # 制表符
+                        text_parts.append("\t")
+
+            self._text_cache = "".join(text_parts)
             return self._text_cache
-
-        text_parts = []
-        for run in self._element.findall(".//w:r", NS):
-            # 遍历 run 的所有子元素，保持顺序
-            for child in run:
-                tag = etree.QName(child.tag).localname
-                if tag == "t":
-                    # 文本节点
-                    if child.text:
-                        text_parts.append(child.text)
-                elif tag == "br":
-                    # 换行符
-                    text_parts.append("\n")
-                elif tag == "tab":
-                    # 制表符
-                    text_parts.append("\t")
-
-        self._text_cache = "".join(text_parts)
-        return self._text_cache
 
     def comment(
         self,
@@ -46,14 +47,15 @@ class Paragraph:
         author: str = "docxnote",
     ):
         """为段落文本范围添加批注"""
-        if end is None:
-            end = len(self.text)
+        with self._document._lock:
+            if end is None:
+                end = len(self.text)
 
-        # 获取批注 ID
-        comment_id = self._document.add_comment(text, author)
+            # 获取批注 ID
+            comment_id = self._document.add_comment(text, author)
 
-        # 在段落中插入批注标记
-        self._insert_comment_markers(comment_id, start, end)
+            # 在段落中插入批注标记
+            self._insert_comment_markers(comment_id, start, end)
 
     def _insert_comment_markers(self, comment_id: int, start: int, end: int):
         """在指定位置插入批注起止标记"""

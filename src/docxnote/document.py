@@ -1,6 +1,7 @@
 """DOCX 文档解析和渲染"""
 
 import io
+import threading
 import zipfile
 from lxml import etree
 
@@ -10,7 +11,11 @@ from .namespaces import NS
 
 
 class DocxDocument:
-    """DOCX 文档对象"""
+    """DOCX 文档对象
+
+    同一 ``DocxDocument`` 实例可在多线程环境下安全使用（内部使用可重入锁串行化访问）。
+    不同实例之间无共享可变状态，可并行使用。多进程请各自持有独立实例。
+    """
 
     def __init__(self, zip_data: bytes):
         self._zip_data = zip_data
@@ -19,6 +24,7 @@ class DocxDocument:
         self._body = None
         self._comments = []
         self._comment_id_counter = 0
+        self._lock = threading.RLock()
 
     @classmethod
     def parse(cls, docx_bytes: bytes, *, keep_comments: bool = False) -> "DocxDocument":
@@ -124,27 +130,33 @@ class DocxDocument:
 
     def blocks(self) -> tuple[Paragraph | Table, ...]:
         """返回文档中的块级元素（元组）"""
-        if self._body is None:
-            return ()
+        with self._lock:
+            if self._body is None:
+                return ()
 
-        blocks: list[Paragraph | Table] = []
-        for child in self._body:
-            tag = etree.QName(child.tag).localname
-            if tag == "p":
-                blocks.append(Paragraph(child, self))
-            elif tag == "tbl":
-                blocks.append(Table(child, self))
-        return tuple(blocks)
+            blocks: list[Paragraph | Table] = []
+            for child in self._body:
+                tag = etree.QName(child.tag).localname
+                if tag == "p":
+                    blocks.append(Paragraph(child, self))
+                elif tag == "tbl":
+                    blocks.append(Table(child, self))
+            return tuple(blocks)
 
     def add_comment(self, text: str, author: str = "docxnote") -> int:
         """添加批注并返回 ID"""
-        comment_id = self._comment_id_counter
-        self._comment_id_counter += 1
-        self._comments.append((comment_id, text, author))
-        return comment_id
+        with self._lock:
+            comment_id = self._comment_id_counter
+            self._comment_id_counter += 1
+            self._comments.append((comment_id, text, author))
+            return comment_id
 
     def render(self) -> bytes:
         """生成新的 DOCX 并返回 bytes"""
+        with self._lock:
+            return self._render_unlocked()
+
+    def _render_unlocked(self) -> bytes:
         output = io.BytesIO()
 
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as out_zip:

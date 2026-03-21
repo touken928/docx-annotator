@@ -166,19 +166,20 @@ class Cell:
 
     def blocks(self) -> tuple:
         """返回单元格中的块级元素（元组）"""
-        if self._element is None:
-            return ()
+        with self._document._lock:
+            if self._element is None:
+                return ()
 
-        from .paragraph import Paragraph
+            from .paragraph import Paragraph
 
-        blocks: list = []
-        for child in self._element:
-            tag = etree.QName(child.tag).localname
-            if tag == "p":
-                blocks.append(Paragraph(child, self._document))
-            elif tag == "tbl":
-                blocks.append(Table(child, self._document))
-        return tuple(blocks)
+            blocks: list = []
+            for child in self._element:
+                tag = etree.QName(child.tag).localname
+                if tag == "p":
+                    blocks.append(Paragraph(child, self._document))
+                elif tag == "tbl":
+                    blocks.append(Table(child, self._document))
+            return tuple(blocks)
 
     def bounds(self) -> tuple[int, int, int, int]:
         """返回单元格边界 (top, left, bottom, right)"""

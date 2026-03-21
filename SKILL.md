@@ -17,6 +17,7 @@ description: >
 - **DOCX 本质**: `docxnote` 直接操作 WordprocessingML，将 DOCX 视为「ZIP + XML」。
 - **文本视图 API**: 你只和 **段落完整字符串** 打交道，**不需要处理 Run**（Word 内部的运行块）。
 - **批注阶段**: 所有批注在内存中构建，调用 `doc.render()` 时才会真正写入 DOCX（含 `comments.xml` 与关系）。
+- **多线程**: 同一 `DocxDocument` 实例可在多线程中安全使用；多个文档请各自 `parse` 独立实例后再并行。
 
 ## 安装与导入
 
