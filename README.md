@@ -249,9 +249,20 @@ Test documents are generated with python-docx; no checked-in DOCX fixtures. See 
 
 ## SKILL
 
-This repo includes [`SKILL.md`](SKILL.md) to help coding agents use `docxnote` correctly. Copy it to one of:
+This repo includes [`SKILL.md`](SKILL.md) to help coding agents use `docxnote` correctly. From the project root, download it into the agent skill folder (replace `main` if your default branch differs). On Windows PowerShell, use `curl.exe` if `curl` is aliased to `Invoke-WebRequest`.
 
-- `.cursor/docxnote/SKILL.md`
-- `.claude/docxnote/SKILL.md`
+**Cursor**
+
+```bash
+mkdir -p .cursor/docxnote
+curl -fsSL -o .cursor/docxnote/SKILL.md https://raw.githubusercontent.com/touken928/docxnote/main/SKILL.md
+```
+
+**Claude Code**
+
+```bash
+mkdir -p .claude/docxnote
+curl -fsSL -o .claude/docxnote/SKILL.md https://raw.githubusercontent.com/touken928/docxnote/main/SKILL.md
+```
 
 Point your agent at that file for install steps, suggested patterns, and caveats.

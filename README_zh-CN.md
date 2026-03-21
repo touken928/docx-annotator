@@ -264,8 +264,20 @@ if bottom - top > 1 or right - left > 1:
 
 ## SKILL
 
-- 本仓库附带 `SKILL.md`，用于指导对话型 / coding Agent 正确调用 `docxnote`。
-- 建议下载到本地并放置在（根据所用工具选择其一）：
-  - `.cursor/docxnote/SKILL.md`
-  - `.claude/docxnote/SKILL.md`
-- 在对话环境中使用本库时，让 Agent 优先参考该文件中的安装方式、推荐代码骨架与注意事项。
+本仓库附带 [`SKILL.md`](SKILL.md)，用于指导对话型 / coding Agent 正确调用 `docxnote`。在项目根目录执行（默认分支为 `main`，若不同请改 URL 中的分支名）。Windows PowerShell 下若 `curl` 被解析为 `Invoke-WebRequest`，请改用 `curl.exe`。
+
+**Cursor**
+
+```bash
+mkdir -p .cursor/docxnote
+curl -fsSL -o .cursor/docxnote/SKILL.md https://raw.githubusercontent.com/touken928/docxnote/main/SKILL.md
+```
+
+**Claude Code**
+
+```bash
+mkdir -p .claude/docxnote
+curl -fsSL -o .claude/docxnote/SKILL.md https://raw.githubusercontent.com/touken928/docxnote/main/SKILL.md
+```
+
+在对话环境中使用本库时，让 Agent 优先参考该文件中的安装方式、推荐代码骨架与注意事项。
