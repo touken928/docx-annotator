@@ -26,6 +26,7 @@
 - 提交前跑：
   - `uv run pre-commit run --all-files`
   - `uv run pytest`
+- 发版：更新 `pyproject.toml` 的 `version`，打标签 `v*` 推送；PyPI 使用 Trusted Publisher 与 `.github/workflows/publish.yml` 对应（见 `README.md`）。
 
 ---
 

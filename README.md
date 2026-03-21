@@ -305,6 +305,10 @@ uv run pre-commit run --all-files
 uv run pytest
 ```
 
+### 发布到 PyPI
+
+使用 [Trusted Publisher（OIDC）](https://docs.pypi.org/trusted-publishers/) 时无需 PyPI API token；PyPI 中 **Environment name 留空** 即可，也无需在 GitHub 仓库里创建 `Environment`。推送形如 `v0.1.0` 的标签会触发 [`.github/workflows/publish.yml`](.github/workflows/publish.yml) 构建并上传。发布前请将 `pyproject.toml` 中的 `version` 与标签一致。
+
 ---
 
 ## SKILL
