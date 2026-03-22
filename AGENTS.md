@@ -1,4 +1,4 @@
-## Docxnote AGENT 指南
+## Docxnote AGENTS 指南
 
 **目标**：保持实现简洁可靠，并在代码、`README.md`（英文）、`README_zh-CN.md`（中文）、`SKILL.md` 之间**同步功能与用法**。
 
@@ -6,7 +6,7 @@
 
 ## 文档分工
 
-- **`AGENT.md`**：开发/维护本库时看的内部说明（依赖、测试、设计习惯）。
+- **`AGENTS.md`**：开发/维护本库时看的内部说明（依赖、测试、设计习惯）。
 - **`README.md`**：英文项目概览与核心 API；**`README_zh-CN.md`**：中文对照，与英文同步维护。
 - **`SKILL.md`**：给使用本库的对话型 / coding Agent，看如何在回答中**调用 `docxnote`**，内容尽量精简。
 
@@ -37,4 +37,3 @@
   - `DocxDocument` / `Paragraph` / `Table` / `Cell`
   - 使用 `paragraph.text` 和 `paragraph.comment(start, end, ...)` 等简单接口。
 - Word Run / XML 细节全部封装在内部模块，不放进公共 API。
-
